@@ -13,15 +13,39 @@ const uploadOnCloudinary = async (localFilePath)=>{
         if(!localFilePath) return null;
 
         const response = await cloudinary.uploader.upload(localFilePath,{
-            resource_type: 'image' || 'video',
+            resource_type: 'auto',
         })
 
-        console.log(response.url);
+        // console.log(response.url);
+        fs.unlinkSync(localFilePath);
+
+        return response;
+        
     }catch(err){
         fs.unlinkSync(localFilePath);
         return null;
     } 
 }
 
-module.exports = uploadOnCloudinary;
+const deleteFromCloudinary = async function (public_id) {
+    try{
+        if(!public_id) return null;
+
+        const response = await cloudinary.uploader.destroy(public_id,{
+            resource_type:'image'
+        })
+
+        if(response?.result==="ok") console.log('deleted successfully');
+        else console.log('unable to delete');
+
+    }catch(err){
+        console.log('error while deleting file',err);
+        return null;
+    }
+}
+
+module.exports = {
+    uploadOnCloudinary,
+    deleteFromCloudinary
+};
 

@@ -2,6 +2,12 @@ const user = require('../models/user.model');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+const {
+    uploadOnCloudinary,
+    deleteFromCloudinary
+
+} = require('../utils/cloudinary');
+
 const cookieOptions = {
     httpOnly: true,
     secure: true,
@@ -45,7 +51,6 @@ const registerUser = async (req,res)=>{
         .json({createdUser})
 
     }catch(err){
-        console.log(err);
         res.status(500).json({error: 'Internal Server error'})
     }
 }
@@ -88,7 +93,7 @@ const loginUser = async (req,res)=>{
 
 const logoutUser = async (req,res)=>{
     try{
-        await user.findByIdAndUpdate(req.User?._id,{
+        await user.findByIdAndUpdate(req.user?._id,{
             $unset:{
                 refreshToken:1
             },
@@ -133,7 +138,7 @@ const refreshAccessToken = async (req,res)=>{
 
 const getProfile = async (req,res)=>{
     try{
-        const findUser = await user.findById(req.User._id).select(
+        const findUser = await user.findById(req.user._id).select(
             '-password -refreshToken'
         );
 
@@ -145,12 +150,82 @@ const getProfile = async (req,res)=>{
     }
 }
 
+const changePassword = async(req,res)=>{
+    try{
+        const {oldPassword, newPassword, confirmPassword} = req.body;
+
+        if(!oldPassword || !newPassword || !confirmPassword) return res.status(400).json({error:'all fields are required'});
+
+        const findUser = await user.findById(req.user?._id);
+        if(!findUser) res.status(404).json({error:'user not found'});
+
+        if(!await findUser.comparePassword(oldPassword)){
+            return res.status(400).json({error:'Incorrect current password'});
+        }
+
+        if(newPassword!==confirmPassword) return res.status(400).json({error:'confirm password accurately'});
+
+        findUser.password = newPassword;
+        await findUser.save();
+
+        res.status(200).json({message: 'password changed successfully'});
+
+    }catch(err){
+        res.status(500).json({err:'Internal Server error'});
+    }
+}
+
+const updateProfile = async(req,res)=>{
+    try{
+        const newData = req.body;
+
+        const response = await user.findByIdAndUpdate(req.user?._id,newData,{
+            new:true,
+        }).select('-password -refreshToken');
+
+        res.status(200).json({response, message:'user profile updated successfully'});
+
+    }catch(err){
+        res.status(500).json({err:'Internal Server error'});
+    }
+}
+
+const updateUserAvatar = async(req,res)=>{
+    try{
+        const localFilePath = req.file?.path;
+
+        if(!localFilePath) return res.status(400).json({error:'no file is selected'});
+
+        if(req.user?.avatar){
+            await deleteFromCloudinary(req.user.avatar.public_id);
+        }
+
+        const uploadAvatar = await uploadOnCloudinary(localFilePath);
+        if(!uploadAvatar) return res.status(400).json({error:'error while uploading avatar'});
+
+        const updateAvatar = await user.findByIdAndUpdate(req.user?._id, {
+            $set:{
+                avatar:{url:uploadAvatar.url, public_id:uploadAvatar.public_id}
+            }
+
+        },{new:true}).select('-password -refreshToken -images -albums')
+
+        res.status(200).json({avatar:updateAvatar.url, message:'user avatar updated successfully'});
+
+    }catch(err){
+        res.status(500).json({err:'Internal Server error'});
+    }
+}
+
 module.exports = {
     registerUser,
     loginUser,
     logoutUser,
     refreshAccessToken,
     getProfile,
+    changePassword,
+    updateProfile,
+    updateUserAvatar
 
 }
 

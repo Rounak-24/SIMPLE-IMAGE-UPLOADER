@@ -13,7 +13,7 @@ const jwtauthmiddleware = async (req,res,next)=>{
         const User = await user.findById(decoded._id).select('-password -refreshToken');
 
         if(!User) return res.status(401).json({err:'Invalid token'});
-        else req.User = User;
+        else req.user = User;
 
         next();
 

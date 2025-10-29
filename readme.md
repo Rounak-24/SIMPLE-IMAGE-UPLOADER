@@ -24,7 +24,4 @@ This service can be used as a standalone image upload API or integrated into any
 - **dotenv** – environment variable management
 - **cors**, **nodemon** (for development)
 
----
-
-## 📁 Folder Structure
 
