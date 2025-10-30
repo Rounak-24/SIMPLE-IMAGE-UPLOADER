@@ -22,6 +22,11 @@ const userSchema = new mongoose.Schema({
         ref:'image'
     }],
 
+    favImages:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'image'
+    }],
+
     refreshToken:{type:String}
 
 },{timestamps:true})

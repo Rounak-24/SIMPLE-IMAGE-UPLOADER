@@ -21,6 +21,9 @@ connectDB().then(()=>{
 const userRoutes = require('./src/routes/user.routes');
 app.use('/user',userRoutes);
 
+const imgRoutes = require('./src/routes/image.routes');
+app.use('/image',imgRoutes);
+
 
 app.get('/', (req,res)=>{
     res.send('Server is live')

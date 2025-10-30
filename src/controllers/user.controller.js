@@ -139,7 +139,7 @@ const refreshAccessToken = async (req,res)=>{
 const getProfile = async (req,res)=>{
     try{
         const findUser = await user.findById(req.user._id).select(
-            '-password -refreshToken'
+            '-password -refreshToken -images -albums -favImages'
         );
 
         return res.status(200)
@@ -225,7 +225,7 @@ module.exports = {
     getProfile,
     changePassword,
     updateProfile,
-    updateUserAvatar
-
+    updateUserAvatar,
+    
 }
 
